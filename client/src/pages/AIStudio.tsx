@@ -1,8 +1,8 @@
 // AI Studio — Content generation with prompt library
 // Design: Purple AI aesthetic, split-pane layout
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { store, type Prompt } from "@/lib/store";
-import { Sparkles, Copy, Save, Plus, X, Edit2, Trash2, ChevronDown } from "lucide-react";
+import { Sparkles, Copy, Save, Plus, X, Edit2, Trash2, ChevronDown, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 const AI_BG = "https://d2xsxph8kpxj0f.cloudfront.net/97632569/3MeSGugCZeowAaENeGLcBo/ai-studio-bg-JrRBsMZsUNQHKhiFjqieMm.webp";
@@ -104,10 +104,34 @@ export default function AIStudioPage() {
   const [activeTab, setActiveTab] = useState<'generate' | 'library'>('generate');
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('mjw_openai_key') ?? '');
   const [showApiKey, setShowApiKey] = useState(false);
+  const [prefillItemId, setPrefillItemId] = useState<string | null>(null);
 
   const prompts = store.getPrompts();
   const brands = store.getBrands();
   const content = store.getContent();
+
+  // Auto-prefill from Content Brief Builder navigation
+  useEffect(() => {
+    const prefillId = localStorage.getItem('mjw_studio_prefill');
+    if (!prefillId) return;
+    localStorage.removeItem('mjw_studio_prefill');
+    const item = store.getContent().find(c => c.id === prefillId);
+    if (!item) return;
+    setPrefillItemId(prefillId);
+    const brand = store.getBrands().find(b => b.id === item.brandId);
+    setVarValues(prev => ({
+      ...prev,
+      contentId: item.id,
+      brand: brand?.name ?? prev.brand ?? '',
+      keyword: item.targetKeyword ?? prev.keyword ?? '',
+      topic: item.title ?? prev.topic ?? '',
+      audience: item.briefAudience || (brand?.targetAudience ?? '') || prev.audience || '',
+      tone: item.briefTone || (brand?.toneOfVoice ?? '') || prev.tone || '',
+      angle: item.angle || prev.angle || '',
+      cta: item.cta || (brand?.defaultCta ?? '') || prev.cta || '',
+      location: brand?.locationKeyword ?? prev.location ?? '',
+    }));
+  }, []);
 
   const selectedPrompt = prompts.find(p => p.id === selectedPromptId) ?? prompts[0];
   const vars = selectedPrompt ? extractVars(selectedPrompt.userTemplate) : [];
@@ -225,6 +249,22 @@ export default function AIStudioPage() {
           <div className="flex h-full">
             {/* Left: Controls */}
             <div className="w-80 shrink-0 border-r overflow-y-auto p-5 space-y-4" style={{ borderColor: '#2d3748' }}>
+              {/* Prefill banner */}
+              {prefillItemId && (() => {
+                const pi = content.find(c => c.id === prefillItemId);
+                return pi ? (
+                  <div className="flex items-start gap-2 rounded-lg p-3" style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)' }}>
+                    <FileText size={13} style={{ color: '#a78bfa', marginTop: 1, flexShrink: 0 }} />
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium" style={{ color: '#a78bfa' }}>Pre-filled from Brief</p>
+                      <p className="text-xs truncate mt-0.5" style={{ color: '#94a3b8' }}>{pi.title}</p>
+                    </div>
+                    <button onClick={() => { setPrefillItemId(null); setVarValues({}); }} className="ml-auto shrink-0">
+                      <X size={12} style={{ color: '#64748b' }} />
+                    </button>
+                  </div>
+                ) : null;
+              })()}
               {/* Prompt selector */}
               <div>
                 <label className="block text-xs font-medium mb-2" style={{ color: '#64748b' }}>Prompt Template</label>

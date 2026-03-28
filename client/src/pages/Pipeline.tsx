@@ -3,7 +3,8 @@ import { useState, useMemo, useCallback } from "react";
 import { useLocation } from "wouter";
 import { store, type ContentItem, type ContentStatus, type ContentType, type Priority } from "@/lib/store";
 import { statusBadgeClass, priorityBadgeClass, brandClass, formatDate, CONTENT_TYPES, PRIORITIES, STATUS_ORDER, SEARCH_INTENTS } from "@/lib/utils";
-import { Search, Plus, X, ChevronDown, Sparkles, ExternalLink, Trash2, Save } from "lucide-react";
+import { Search, Plus, X, ChevronDown, Sparkles, ExternalLink, Trash2, Save, FileText, CheckCircle2 } from "lucide-react";
+import { ContentBriefPanel } from "@/components/ContentBriefPanel";
 import { toast } from "sonner";
 
 const STATUSES: ContentStatus[] = STATUS_ORDER;
@@ -24,6 +25,9 @@ function AddContentModal({ brands, onClose, onSave }: {
     briefText: '', angle: '', cta: '', draftText: '', assetUrl: '', assetName: '',
     approvalStatus: 'Pending' as ContentItem['approvalStatus'], approvedBy: '',
     publishedUrl: '', trafficMonthly: 0, conversions: 0, repurposedTo: [], internalLinks: [], notes: '',
+    briefAudience: '', briefGoal: '', briefTone: '', briefWordCount: '',
+    briefHeadings: '', briefKeyPoints: '', briefDifferentiators: '',
+    briefCompetitorUrls: '', briefStatus: 'empty' as const,
   });
   const set = (k: string, v: unknown) => setForm(f => ({ ...f, [k]: v }));
 
@@ -108,6 +112,7 @@ export default function PipelinePage() {
   const [showAdd, setShowAdd] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editItem, setEditItem] = useState<ContentItem | null>(null);
+  const [briefItemId, setBriefItemId] = useState<string | null>(null);
   const [, forceUpdate] = useState(0);
   const refresh = () => forceUpdate(n => n + 1);
 
@@ -147,6 +152,13 @@ export default function PipelinePage() {
   }, [editItem]);
 
   const brandName = (id: string) => brands.find(b => b.id === id)?.name ?? id;
+  const briefItem = useMemo(() => briefItemId ? content.find(c => c.id === briefItemId) ?? null : null, [content, briefItemId]);
+
+  const handleGenerateInStudio = useCallback((item: ContentItem) => {
+    // Store the item id so AI Studio can pick it up
+    localStorage.setItem('mjw_studio_prefill', item.id);
+    navigate('/ai-studio');
+  }, [navigate]);
 
   return (
     <div className="flex h-full">
@@ -245,12 +257,25 @@ export default function PipelinePage() {
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-xs" style={{ color: '#94a3b8' }}>{formatDate(item.dueDate)}</td>
                     <td className="px-4 py-3">
-                      <button
-                        onClick={e => { e.stopPropagation(); handleDelete(item.id); }}
-                        className="p-1 rounded hover:bg-red-500/10 transition-colors"
-                      >
-                        <Trash2 size={13} style={{ color: '#64748b' }} />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={e => { e.stopPropagation(); setBriefItemId(item.id); }}
+                          className="p-1 rounded hover:bg-purple-500/10 transition-colors"
+                          title="Open Content Brief"
+                        >
+                          {item.briefStatus === 'complete'
+                            ? <CheckCircle2 size={13} style={{ color: '#34d399' }} />
+                            : item.briefStatus === 'draft'
+                              ? <FileText size={13} style={{ color: '#fbbf24' }} />
+                              : <FileText size={13} style={{ color: '#64748b' }} />}
+                        </button>
+                        <button
+                          onClick={e => { e.stopPropagation(); handleDelete(item.id); }}
+                          className="p-1 rounded hover:bg-red-500/10 transition-colors"
+                        >
+                          <Trash2 size={13} style={{ color: '#64748b' }} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -422,8 +447,16 @@ export default function PipelinePage() {
                 )}
 
                 <button
+                  onClick={() => setBriefItemId(selected.id)}
+                  className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium border"
+                  style={{ borderColor: 'rgba(167,139,250,0.4)', color: '#a78bfa', background: 'rgba(167,139,250,0.06)' }}
+                >
+                  <FileText size={13} />
+                  {selected.briefStatus === 'complete' ? 'View Brief (Complete)' : selected.briefStatus === 'draft' ? 'Edit Brief (Draft)' : 'Build Content Brief'}
+                </button>
+                <button
                   onClick={() => setEditItem({ ...selected })}
-                  className="w-full py-2 rounded-lg text-sm font-medium border mt-2"
+                  className="w-full py-2 rounded-lg text-sm font-medium border"
                   style={{ borderColor: '#6ee7f7', color: '#6ee7f7', background: 'rgba(110,231,247,0.06)' }}
                 >
                   Edit Item
@@ -435,6 +468,15 @@ export default function PipelinePage() {
       )}
 
       {showAdd && <AddContentModal brands={brands} onClose={() => setShowAdd(false)} onSave={handleAdd} />}
+
+      {briefItem && (
+        <ContentBriefPanel
+          item={briefItem}
+          onClose={() => setBriefItemId(null)}
+          onSaved={() => { refresh(); }}
+          onGenerateInStudio={handleGenerateInStudio}
+        />
+      )}
     </div>
   );
 }

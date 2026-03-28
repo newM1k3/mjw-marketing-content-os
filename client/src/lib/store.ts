@@ -47,6 +47,16 @@ export interface ContentItem {
   repurposedTo: string[];
   internalLinks: string[];
   notes: string;
+  // Content Brief Builder fields
+  briefAudience: string;
+  briefGoal: string;
+  briefTone: string;
+  briefWordCount: string;
+  briefHeadings: string;
+  briefKeyPoints: string;
+  briefDifferentiators: string;
+  briefCompetitorUrls: string;
+  briefStatus: 'empty' | 'draft' | 'complete';
   createdAt: string;
   updatedAt: string;
 }
@@ -120,6 +130,12 @@ const SEED_USERS: User[] = [
   { id: 'user-jake', name: 'Jake Walling', email: 'jake@escapemaze.ca', role: 'Editor', avatar: 'JW', brandIds: ['brand-escape-maze'] },
 ];
 
+const EMPTY_BRIEF = {
+  briefAudience: '', briefGoal: '', briefTone: '', briefWordCount: '',
+  briefHeadings: '', briefKeyPoints: '', briefDifferentiators: '',
+  briefCompetitorUrls: '', briefStatus: 'empty' as const,
+};
+
 const SEED_CONTENT: ContentItem[] = [
   {
     id: nanoid(), title: 'Top 10 Team Building Activities Near Peterborough', brandId: 'brand-escape-maze',
@@ -130,6 +146,7 @@ const SEED_CONTENT: ContentItem[] = [
     draftText: '', assetUrl: '', assetName: '', approvalStatus: 'Approved', approvedBy: 'user-mike',
     publishedUrl: 'https://escapemaze.ca/blog/team-building-peterborough',
     trafficMonthly: 420, conversions: 8, repurposedTo: ['Instagram', 'Facebook'], internalLinks: [], notes: '',
+    ...EMPTY_BRIEF, briefAudience: 'Corporate event planners, HR managers', briefGoal: 'Rank for team building keyword and drive group bookings', briefTone: 'Adventurous, authoritative, local expert', briefWordCount: '1200', briefHeadings: 'Why Team Building Matters|Indoor Options Near Peterborough|Outdoor Adventures|Why Escape Maze Tops the List|How to Book', briefKeyPoints: 'Variety of options, Escape Maze unique selling points, local focus, corporate packages', briefStatus: 'complete' as const,
     createdAt: '2026-02-15T10:00:00Z', updatedAt: '2026-03-01T10:00:00Z',
   },
   {
@@ -140,6 +157,7 @@ const SEED_CONTENT: ContentItem[] = [
     angle: 'Romantic adventure angle', cta: 'Book Date Night',
     draftText: '', assetUrl: '', assetName: '', approvalStatus: 'Pending', approvedBy: '',
     publishedUrl: '', trafficMonthly: 0, conversions: 0, repurposedTo: [], internalLinks: [], notes: 'Draft in progress',
+    ...EMPTY_BRIEF, briefAudience: 'Couples aged 25-45 looking for unique date ideas', briefGoal: 'Capture commercial intent searches, drive bookings', briefTone: 'Fun, romantic, adventurous', briefWordCount: '1000', briefStatus: 'draft' as const,
     createdAt: '2026-03-10T10:00:00Z', updatedAt: '2026-03-10T10:00:00Z',
   },
   {
@@ -151,6 +169,7 @@ const SEED_CONTENT: ContentItem[] = [
     draftText: 'Spring is the perfect time to bring your team together...', assetUrl: '', assetName: '',
     approvalStatus: 'Approved', approvedBy: 'user-mike', publishedUrl: '', trafficMonthly: 0, conversions: 0,
     repurposedTo: [], internalLinks: [], notes: '',
+    ...EMPTY_BRIEF,
     createdAt: '2026-03-20T10:00:00Z', updatedAt: '2026-03-22T10:00:00Z',
   },
   {
@@ -162,6 +181,7 @@ const SEED_CONTENT: ContentItem[] = [
     draftText: 'Most plumbers think SEO is a scam...', assetUrl: '', assetName: '',
     approvalStatus: 'Reviewed', approvedBy: '', publishedUrl: '', trafficMonthly: 0, conversions: 0,
     repurposedTo: [], internalLinks: [], notes: 'Needs stat verification',
+    ...EMPTY_BRIEF, briefAudience: 'Plumbing business owners, skeptical of marketing', briefGoal: 'Convert skeptics into SEO clients', briefTone: 'Direct, data-driven, no fluff', briefWordCount: '1500', briefStatus: 'draft' as const,
     createdAt: '2026-03-15T10:00:00Z', updatedAt: '2026-03-25T10:00:00Z',
   },
   {
@@ -172,6 +192,7 @@ const SEED_CONTENT: ContentItem[] = [
     angle: 'Actionable quick-win', cta: 'Download the Free Checklist',
     draftText: '', assetUrl: '', assetName: '', approvalStatus: 'Pending', approvedBy: '',
     publishedUrl: '', trafficMonthly: 0, conversions: 0, repurposedTo: [], internalLinks: [], notes: '',
+    ...EMPTY_BRIEF,
     createdAt: '2026-03-25T10:00:00Z', updatedAt: '2026-03-25T10:00:00Z',
   },
   {
@@ -182,6 +203,7 @@ const SEED_CONTENT: ContentItem[] = [
     angle: 'Parent decision guide', cta: 'Register for Summer Camp',
     draftText: '', assetUrl: '', assetName: '', approvalStatus: 'Pending', approvedBy: '',
     publishedUrl: '', trafficMonthly: 0, conversions: 0, repurposedTo: [], internalLinks: [], notes: '',
+    ...EMPTY_BRIEF,
     createdAt: '2026-03-26T10:00:00Z', updatedAt: '2026-03-26T10:00:00Z',
   },
   {
@@ -192,6 +214,7 @@ const SEED_CONTENT: ContentItem[] = [
     angle: 'ROI comparison', cta: 'Start Your SEO Strategy',
     draftText: '', assetUrl: '', assetName: '', approvalStatus: 'Pending', approvedBy: '',
     publishedUrl: '', trafficMonthly: 0, conversions: 0, repurposedTo: [], internalLinks: [], notes: '',
+    ...EMPTY_BRIEF,
     createdAt: '2026-03-26T10:00:00Z', updatedAt: '2026-03-26T10:00:00Z',
   },
   {
@@ -203,6 +226,7 @@ const SEED_CONTENT: ContentItem[] = [
     draftText: 'Did you know Escape Maze has a full disc golf course?', assetUrl: '', assetName: '',
     approvalStatus: 'Approved', approvedBy: 'user-mike', publishedUrl: '', trafficMonthly: 0, conversions: 0,
     repurposedTo: [], internalLinks: [], notes: '',
+    ...EMPTY_BRIEF,
     createdAt: '2026-03-22T10:00:00Z', updatedAt: '2026-03-28T10:00:00Z',
   },
   {
@@ -213,6 +237,7 @@ const SEED_CONTENT: ContentItem[] = [
     angle: 'Proof-based case study', cta: 'Get Similar Results',
     draftText: '', assetUrl: '', assetName: '', approvalStatus: 'Pending', approvedBy: '',
     publishedUrl: '', trafficMonthly: 0, conversions: 0, repurposedTo: [], internalLinks: [], notes: '',
+    ...EMPTY_BRIEF,
     createdAt: '2026-03-27T10:00:00Z', updatedAt: '2026-03-27T10:00:00Z',
   },
   {
@@ -223,6 +248,7 @@ const SEED_CONTENT: ContentItem[] = [
     angle: 'Birthday planning guide', cta: 'Book a Birthday Party',
     draftText: '', assetUrl: '', assetName: '', approvalStatus: 'Pending', approvedBy: '',
     publishedUrl: '', trafficMonthly: 0, conversions: 0, repurposedTo: [], internalLinks: [], notes: '',
+    ...EMPTY_BRIEF,
     createdAt: '2026-03-27T10:00:00Z', updatedAt: '2026-03-27T10:00:00Z',
   },
 ];
