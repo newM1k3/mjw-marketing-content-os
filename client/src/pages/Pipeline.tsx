@@ -3,7 +3,7 @@ import { useState, useMemo, useCallback } from "react";
 import { useLocation } from "wouter";
 import { store, type ContentItem, type ContentStatus, type ContentType, type Priority } from "@/lib/store";
 import { statusBadgeClass, priorityBadgeClass, brandClass, formatDate, CONTENT_TYPES, PRIORITIES, STATUS_ORDER, SEARCH_INTENTS } from "@/lib/utils";
-import { Search, Plus, X, ChevronDown, Sparkles, ExternalLink, Trash2, Save, FileText, CheckCircle2 } from "lucide-react";
+import { Search, Plus, X, ChevronDown, Sparkles, ExternalLink, Trash2, Save, FileText, CheckCircle2, Copy } from "lucide-react";
 import { ContentBriefPanel } from "@/components/ContentBriefPanel";
 import { toast } from "sonner";
 
@@ -142,6 +142,18 @@ export default function PipelinePage() {
     toast.success('Item deleted');
     refresh();
   }, [selectedId]);
+
+  const handleDuplicate = useCallback((item: ContentItem) => {
+    const { id, createdAt, updatedAt, ...rest } = item;
+    store.addContent({
+      ...rest,
+      title: `${rest.title} (Copy)`,
+      status: 'Backlog',
+      draftText: '',
+    });
+    toast.success('Item duplicated — find it in Backlog');
+    refresh();
+  }, []);
 
   const handleSaveEdit = useCallback(() => {
     if (!editItem) return;
@@ -290,8 +302,16 @@ export default function PipelinePage() {
                               : <FileText size={13} style={{ color: '#64748b' }} />}
                         </button>
                         <button
+                          onClick={e => { e.stopPropagation(); handleDuplicate(item); }}
+                          className="p-1 rounded hover:bg-cyan-500/10 transition-colors"
+                          title="Duplicate item"
+                        >
+                          <Copy size={13} style={{ color: '#64748b' }} />
+                        </button>
+                        <button
                           onClick={e => { e.stopPropagation(); handleDelete(item.id); }}
                           className="p-1 rounded hover:bg-red-500/10 transition-colors"
+                          title="Delete item"
                         >
                           <Trash2 size={13} style={{ color: '#64748b' }} />
                         </button>

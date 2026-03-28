@@ -1,10 +1,7 @@
 // AppShell — Dark Studio layout: fixed sidebar + top bar + main content
 // Design: MJW dark theme, cyan active states, Space Grotesk headings
 import { useLocation } from "wouter";
-import {
-  LayoutDashboard, List, Columns3, CalendarDays, Sparkles,
-  Target, Settings, ChevronRight, Zap
-} from "lucide-react";
+import { LayoutDashboard, List, Columns3, CalendarDays, Sparkles, Target, Settings, Mail, Zap, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -14,6 +11,7 @@ const NAV_ITEMS = [
   { label: "Calendar",        href: "/calendar",        icon: CalendarDays },
   { label: "AI Studio",       href: "/ai-studio",       icon: Sparkles },
   { label: "Competitor Gaps", href: "/competitor-gaps", icon: Target },
+  { label: "Weekly Digest",   href: "/weekly-digest",   icon: Mail },
   { label: "Settings",        href: "/settings",        icon: Settings },
 ];
 

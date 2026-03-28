@@ -1,6 +1,6 @@
 // AI Studio — Content generation with prompt library
 // Design: Purple AI aesthetic, split-pane layout
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { store, type Prompt } from "@/lib/store";
 import { Sparkles, Copy, Save, Plus, X, Edit2, Trash2, ChevronDown, FileText } from "lucide-react";
 import { toast } from "sonner";
@@ -209,10 +209,25 @@ export default function AIStudioPage() {
     toast.success('Saved to content item');
   }, [varValues, output]);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(output);
-    toast.success('Copied to clipboard');
-  };
+  const [copied, setCopied] = useState(false);
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(output).then(() => {
+      setCopied(true);
+      toast.success('Copied to clipboard');
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {
+      // Fallback for browsers that block clipboard
+      const el = document.createElement('textarea');
+      el.value = output;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      setCopied(true);
+      toast.success('Copied to clipboard');
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [output]);
 
   const handleSaveApiKey = () => {
     localStorage.setItem('mjw_openai_key', apiKey);
@@ -378,9 +393,11 @@ export default function AIStudioPage() {
                 <p className="text-sm font-medium" style={{ color: '#e2e8f0' }}>Output</p>
                 {output && (
                   <div className="flex gap-2">
-                    <button onClick={handleCopy} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg"
-                      style={{ background: 'rgba(110,231,247,0.1)', color: '#6ee7f7', border: '1px solid rgba(110,231,247,0.25)' }}>
-                      <Copy size={12} /> Copy
+                    <button onClick={handleCopy} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all"
+                      style={copied
+                        ? { background: 'rgba(52,211,153,0.15)', color: '#34d399', border: '1px solid rgba(52,211,153,0.35)' }
+                        : { background: 'rgba(110,231,247,0.1)', color: '#6ee7f7', border: '1px solid rgba(110,231,247,0.25)' }}>
+                      <Copy size={12} /> {copied ? 'Copied!' : 'Copy'}
                     </button>
                     <button onClick={handleSaveToItem} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg"
                       style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.25)' }}>
@@ -404,10 +421,23 @@ export default function AIStudioPage() {
                   </div>
                 )}
                 {output && (
-                  <pre className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: '#e2e8f0', fontFamily: 'inherit' }}>
-                    {output}
-                    {isGenerating && <span className="animate-pulse" style={{ color: '#a78bfa' }}>▊</span>}
-                  </pre>
+                  <div className="relative group">
+                    <pre className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: '#e2e8f0', fontFamily: 'inherit' }}>
+                      {output}
+                      {isGenerating && <span className="animate-pulse" style={{ color: '#a78bfa' }}>▊</span>}
+                    </pre>
+                    {/* Floating copy button — visible on hover or touch (mobile) */}
+                    <button
+                      onClick={handleCopy}
+                      className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-xs px-2 py-1 rounded-lg"
+                      style={copied
+                        ? { background: 'rgba(52,211,153,0.2)', color: '#34d399', border: '1px solid rgba(52,211,153,0.4)' }
+                        : { background: 'rgba(15,17,23,0.85)', color: '#6ee7f7', border: '1px solid rgba(110,231,247,0.3)' }}
+                      title="Copy output"
+                    >
+                      <Copy size={11} /> {copied ? 'Copied!' : 'Copy'}
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

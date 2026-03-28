@@ -9,7 +9,8 @@ import PipelinePage from "./pages/Pipeline";
 import KanbanPage from "./pages/Kanban";
 import CalendarPage from "./pages/Calendar";
 import AIStudioPage from "./pages/AIStudio";
-import CompetitorGapsPage from "./pages/CompetitorGaps";
+import CompetitorGaps from "./pages/CompetitorGaps";
+import WeeklyDigest from "./pages/WeeklyDigest";
 import SettingsPage from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -22,7 +23,8 @@ function Router() {
         <Route path="/kanban" component={KanbanPage} />
         <Route path="/calendar" component={CalendarPage} />
         <Route path="/ai-studio" component={AIStudioPage} />
-        <Route path="/competitor-gaps" component={CompetitorGapsPage} />
+        <Route path="/competitor-gaps" component={CompetitorGaps} />
+        <Route path="/weekly-digest" component={WeeklyDigest} />
         <Route path="/settings" component={SettingsPage} />
         <Route component={NotFound} />
       </Switch>
