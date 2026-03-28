@@ -6,7 +6,7 @@ import { store } from "@/lib/store";
 import { formatDate, statusBadgeClass, brandClass } from "@/lib/utils";
 import {
   FileText, CheckCircle2, Clock, Target, TrendingUp,
-  ArrowRight, Sparkles, BarChart3
+  ArrowRight, Sparkles, BarChart3, BookOpen, AlertCircle
 } from "lucide-react";
 
 const HERO_BG = "https://d2xsxph8kpxj0f.cloudfront.net/97632569/3MeSGugCZeowAaENeGLcBo/hero-bg-X4BNiberjJQWiAnXwPFMEB.webp";
@@ -26,6 +26,20 @@ export default function DashboardPage() {
     const totalConversions = content.reduce((sum, c) => sum + (c.conversions || 0), 0);
     return { active, published, pendingApproval, openGaps, totalTraffic, totalConversions };
   }, [content, gaps]);
+
+  const briefMetrics = useMemo(() => {
+    const total = content.length;
+    const complete = content.filter(c => c.briefStatus === 'complete').length;
+    const draft = content.filter(c => c.briefStatus === 'draft').length;
+    const empty = content.filter(c => !c.briefStatus || c.briefStatus === 'empty').length;
+    const score = total > 0 ? Math.round((complete / total) * 100) : 0;
+    // Items in active stages that still have empty briefs — these are the most urgent
+    const activeStages: string[] = ['Briefing', 'Drafting', 'Editing'];
+    const urgentItems = content.filter(c =>
+      activeStages.includes(c.status) && (!c.briefStatus || c.briefStatus === 'empty')
+    );
+    return { total, complete, draft, empty, score, urgentItems };
+  }, [content]);
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -175,6 +189,99 @@ export default function DashboardPage() {
             })}
           </div>
         </div>
+      </div>
+
+      {/* Brief Quality Score */}
+      <div className="rounded-xl border p-5" style={{ background: '#1a1f2e', borderColor: '#2d3748' }}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <BookOpen size={15} style={{ color: '#a78bfa' }} />
+            <h2 className="text-sm font-semibold" style={{ color: '#e2e8f0', fontFamily: "'Space Grotesk', sans-serif" }}>
+              Brief Quality Score
+            </h2>
+          </div>
+          <button onClick={() => navigate('/pipeline')} className="flex items-center gap-1 text-xs" style={{ color: '#6ee7f7' }}>
+            Fix in Pipeline <ArrowRight size={12} />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-6 mb-4">
+          {/* Big score circle */}
+          <div className="relative shrink-0" style={{ width: 80, height: 80 }}>
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="34" fill="none" stroke="#2d3748" strokeWidth="7" />
+              <circle
+                cx="40" cy="40" r="34" fill="none"
+                stroke={briefMetrics.score === 100 ? '#34d399' : briefMetrics.score >= 50 ? '#a78bfa' : '#f87171'}
+                strokeWidth="7"
+                strokeLinecap="round"
+                strokeDasharray={`${2 * Math.PI * 34}`}
+                strokeDashoffset={`${2 * Math.PI * 34 * (1 - briefMetrics.score / 100)}`}
+                transform="rotate(-90 40 40)"
+                style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-lg font-bold" style={{ color: '#e2e8f0', fontFamily: "'Space Grotesk', sans-serif", lineHeight: 1 }}>
+                {briefMetrics.score}%
+              </span>
+              <span className="text-xs" style={{ color: '#64748b' }}>score</span>
+            </div>
+          </div>
+
+          {/* Breakdown bars */}
+          <div className="flex-1 space-y-2">
+            {[
+              { label: 'Complete', count: briefMetrics.complete, color: '#34d399' },
+              { label: 'Draft', count: briefMetrics.draft, color: '#fbbf24' },
+              { label: 'Empty', count: briefMetrics.empty, color: '#f87171' },
+            ].map(({ label, count, color }) => (
+              <div key={label} className="flex items-center gap-3">
+                <span className="text-xs w-16 shrink-0" style={{ color: '#94a3b8' }}>{label}</span>
+                <div className="flex-1 h-1.5 rounded-full" style={{ background: '#2d3748' }}>
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{ width: `${briefMetrics.total > 0 ? (count / briefMetrics.total) * 100 : 0}%`, background: color }}
+                  />
+                </div>
+                <span className="text-xs w-5 text-right shrink-0" style={{ color: '#64748b' }}>{count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Urgent items needing briefs */}
+        {briefMetrics.urgentItems.length > 0 ? (
+          <div className="rounded-lg p-3" style={{ background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.2)' }}>
+            <div className="flex items-center gap-1.5 mb-2">
+              <AlertCircle size={12} style={{ color: '#f87171' }} />
+              <p className="text-xs font-medium" style={{ color: '#f87171' }}>
+                {briefMetrics.urgentItems.length} active item{briefMetrics.urgentItems.length > 1 ? 's' : ''} missing a brief
+              </p>
+            </div>
+            <div className="space-y-1">
+              {briefMetrics.urgentItems.slice(0, 3).map(item => (
+                <div key={item.id} className="flex items-center justify-between">
+                  <span className="text-xs truncate" style={{ color: '#94a3b8', maxWidth: '70%' }}>{item.title}</span>
+                  <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: '#2d3748', color: '#64748b' }}>{item.status}</span>
+                </div>
+              ))}
+              {briefMetrics.urgentItems.length > 3 && (
+                <p className="text-xs" style={{ color: '#64748b' }}>+{briefMetrics.urgentItems.length - 3} more</p>
+              )}
+            </div>
+          </div>
+        ) : briefMetrics.score === 100 ? (
+          <div className="rounded-lg p-3 flex items-center gap-2" style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.2)' }}>
+            <CheckCircle2 size={13} style={{ color: '#34d399' }} />
+            <p className="text-xs" style={{ color: '#34d399' }}>All briefs complete — pipeline is ready to generate.</p>
+          </div>
+        ) : (
+          <div className="rounded-lg p-3 flex items-center gap-2" style={{ background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.2)' }}>
+            <Sparkles size={12} style={{ color: '#a78bfa' }} />
+            <p className="text-xs" style={{ color: '#a78bfa' }}>No urgent gaps — keep filling briefs to improve your score.</p>
+          </div>
+        )}
       </div>
 
       {/* Recent Activity */}

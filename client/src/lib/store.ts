@@ -256,9 +256,9 @@ const SEED_CONTENT: ContentItem[] = [
 const SEED_PROMPTS: Prompt[] = [
   {
     id: 'prompt-blog', name: 'Blog Post Generator', category: 'Content',
-    systemPrompt: 'You are an expert content writer for local businesses. Write SEO-optimized blog posts that rank well and convert readers into customers.',
-    userTemplate: 'Write a 1200-word blog post for {{brand}} targeting the keyword "{{keyword}}". Tone: {{tone}}. Target audience: {{audience}}. Angle: {{angle}}. End with a CTA: {{cta}}.',
-    variables: ['brand', 'keyword', 'tone', 'audience', 'angle', 'cta'],
+    systemPrompt: 'You are an expert content writer for local businesses. Write SEO-optimized blog posts that rank well and convert readers into customers. Always follow the provided H2 structure exactly — do not invent your own headings.',
+    userTemplate: 'Write a {{wordcount}}-word blog post for {{brand}} targeting the keyword "{{keyword}}".\n\nTone: {{tone}}\nTarget audience: {{audience}}\nAngle: {{angle}}\nCTA: {{cta}}\n\nUse EXACTLY these H2 headings in this order:\n{{headings}}\n\nUnder each heading, write 2-3 paragraphs that support the overall keyword and angle. End the post with a strong CTA paragraph.',
+    variables: ['brand', 'keyword', 'tone', 'audience', 'angle', 'cta', 'wordcount', 'headings'],
   },
   {
     id: 'prompt-gbp', name: 'GBP Post Generator', category: 'Local SEO',

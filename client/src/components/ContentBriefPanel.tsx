@@ -2,7 +2,7 @@
 // Design: Dark Studio, purple AI accent, right-side drawer
 import { useState, useEffect } from "react";
 import { store, type ContentItem } from "@/lib/store";
-import { X, Save, Sparkles, CheckCircle2, FileText, ChevronRight, Copy } from "lucide-react";
+import { X, Save, Sparkles, CheckCircle2, FileText, ChevronRight, Copy, Loader2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
@@ -104,6 +104,7 @@ export function ContentBriefPanel({ item, onClose, onSaved, onGenerateInStudio }
   });
   const [isDirty, setIsDirty] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [isGeneratingBrief, setIsGeneratingBrief] = useState(false);
 
   useEffect(() => {
     // Trigger slide-in animation
@@ -152,6 +153,51 @@ export function ContentBriefPanel({ item, onClose, onSaved, onGenerateInStudio }
   const handleClose = () => {
     setIsVisible(false);
     setTimeout(onClose, 300);
+  };
+
+  const handleAIGenerateBrief = async () => {
+    const apiKey = localStorage.getItem('mjw_openai_key');
+    if (!apiKey) {
+      toast.error('Add your OpenAI API key in AI Studio first');
+      return;
+    }
+    setIsGeneratingBrief(true);
+    const brandName = brand?.name ?? item.brandId;
+    const systemPrompt = `You are an expert content strategist. Given a content item, generate a structured content brief with specific, actionable suggestions. Return ONLY a JSON object with these exact keys: audience, goal, tone, wordCount, headings (pipe-separated H2s), keyPoints, differentiators. No markdown, no explanation, just the JSON.`;
+    const userPrompt = `Brand: ${brandName}\nContent Title: ${item.title}\nTarget Keyword: ${item.targetKeyword || 'not set'}\nContent Type: ${item.type}\nSearch Intent: ${item.searchIntent || 'not set'}\nAngle: ${item.angle || 'not set'}\nBrand Voice: ${brand?.toneOfVoice || 'professional, helpful'}\nTarget Audience: ${brand?.targetAudience || 'local business owners'}\nLocation: ${brand?.locationKeyword || ''}\n\nGenerate a detailed content brief for this piece.`;
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
+          temperature: 0.7,
+        }),
+      });
+      if (!response.ok) throw new Error('API error');
+      const data = await response.json();
+      const raw = data.choices?.[0]?.message?.content ?? '{}';
+      // Strip markdown code fences if present
+      const cleaned = raw.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+      const parsed = JSON.parse(cleaned);
+      setForm(f => ({
+        ...f,
+        briefAudience: parsed.audience || f.briefAudience,
+        briefGoal: parsed.goal || f.briefGoal,
+        briefTone: parsed.tone || f.briefTone,
+        briefWordCount: parsed.wordCount || f.briefWordCount,
+        briefHeadings: parsed.headings || f.briefHeadings,
+        briefKeyPoints: parsed.keyPoints || f.briefKeyPoints,
+        briefDifferentiators: parsed.differentiators || f.briefDifferentiators,
+      }));
+      setIsDirty(true);
+      toast.success('Brief suggestions generated — review and edit before saving');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Generation failed');
+    } finally {
+      setIsGeneratingBrief(false);
+    }
   };
 
   return (
@@ -218,6 +264,21 @@ export function ContentBriefPanel({ item, onClose, onSaved, onGenerateInStudio }
 
         {/* Fields */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+          {/* AI Generate Brief button */}
+          <button
+            onClick={handleAIGenerateBrief}
+            disabled={isGeneratingBrief}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all disabled:opacity-60"
+            style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.3)' }}
+          >
+            {isGeneratingBrief
+              ? <><Loader2 size={14} className="animate-spin" /> Generating suggestions...</>
+              : <><Wand2 size={14} /> Generate Brief Suggestions with AI</>}
+          </button>
+          {isGeneratingBrief && (
+            <p className="text-xs text-center" style={{ color: '#64748b' }}>Analyzing your content item and brand voice...</p>
+          )}
+
           {/* Core item info (read-only summary) */}
           <div className="rounded-lg p-3 space-y-1.5" style={{ background: '#1a1f2e', border: '1px solid #2d3748' }}>
             <p className="text-xs font-medium mb-2" style={{ color: '#64748b' }}>Item Summary</p>

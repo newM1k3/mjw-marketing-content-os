@@ -130,6 +130,11 @@ export default function AIStudioPage() {
       angle: item.angle || prev.angle || '',
       cta: item.cta || (brand?.defaultCta ?? '') || prev.cta || '',
       location: brand?.locationKeyword ?? prev.location ?? '',
+      // Brief-specific variables
+      headings: item.briefHeadings
+        ? item.briefHeadings.split('|').map((h, i) => `## ${i + 1}. ${h.trim()}`).join('\n')
+        : prev.headings || '',
+      wordcount: item.briefWordCount || prev.wordcount || '1200',
     }));
   }, []);
 
