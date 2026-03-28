@@ -223,7 +223,7 @@ export default function PipelinePage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b" style={{ borderColor: '#2d3748' }}>
-                  {['Title', 'Brand', 'Type', 'Status', 'Priority', 'Keyword', 'Due Date', ''].map(h => (
+                  {['Title', 'Brand', 'Type', 'Status', 'Priority', 'Keyword', 'Due Date', 'Brief', ''].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-xs font-medium" style={{ color: '#64748b' }}>{h}</th>
                   ))}
                 </tr>
@@ -256,6 +256,26 @@ export default function PipelinePage() {
                       <span className="truncate block text-xs" style={{ color: '#94a3b8' }}>{item.targetKeyword || '—'}</span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-xs" style={{ color: '#94a3b8' }}>{formatDate(item.dueDate)}</td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={e => { e.stopPropagation(); setBriefItemId(item.id); }}
+                        title={`Brief: ${item.briefStatus ?? 'empty'}`}
+                        className="flex items-center gap-1.5 group"
+                      >
+                        <span
+                          className="inline-block rounded-full transition-transform group-hover:scale-125"
+                          style={{
+                            width: 9, height: 9,
+                            background: item.briefStatus === 'complete' ? '#34d399'
+                              : item.briefStatus === 'draft' ? '#fbbf24'
+                              : '#f87171',
+                            boxShadow: item.briefStatus === 'complete' ? '0 0 6px #34d39988'
+                              : item.briefStatus === 'draft' ? '0 0 6px #fbbf2488'
+                              : '0 0 4px #f8717144',
+                          }}
+                        />
+                      </button>
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
                         <button

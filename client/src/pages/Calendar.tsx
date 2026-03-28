@@ -130,6 +130,20 @@ export default function CalendarPage() {
     refresh();
   };
 
+  const handleApproveAndSchedule = (event: CalendarEvent) => {
+    // Approve the calendar event
+    store.updateCalendarEvent(event.id, { approvalStatus: 'Approved' });
+    // Also advance the linked content item to 'Scheduled' if it isn't already published
+    if (event.contentId) {
+      const item = store.getContent().find(c => c.id === event.contentId);
+      if (item && !['Scheduled', 'Published'].includes(item.status)) {
+        store.updateContent(event.contentId, { status: 'Scheduled' });
+      }
+    }
+    toast.success('Approved & moved to Scheduled in Pipeline');
+    refresh();
+  };
+
   const handleDelete = (id: string) => {
     store.deleteCalendarEvent(id);
     toast.success('Removed');
@@ -217,11 +231,21 @@ export default function CalendarPage() {
                         event.approvalStatus === 'Rejected' ? 'badge-high' : 'badge-briefing'
                       }`}>{event.approvalStatus}</span>
                       {event.approvalStatus === 'Pending' && (
-                        <button onClick={() => handleApprove(event.id)}
-                          className="text-xs px-2 py-1 rounded-lg"
-                          style={{ background: 'rgba(52,211,153,0.12)', color: '#34d399', border: '1px solid rgba(52,211,153,0.3)' }}>
-                          Approve
+                        <button
+                          onClick={() => handleApproveAndSchedule(event)}
+                          className="text-xs px-2 py-1 rounded-lg flex items-center gap-1 font-medium transition-all hover:brightness-110"
+                          style={{ background: 'rgba(52,211,153,0.12)', color: '#34d399', border: '1px solid rgba(52,211,153,0.3)' }}
+                          title="Approve this event and move the Pipeline item to Scheduled"
+                        >
+                          <CheckCircle2 size={11} />
+                          Approve &amp; Schedule
                         </button>
+                      )}
+                      {event.approvalStatus === 'Approved' && (
+                        <span className="text-xs px-2 py-1 rounded-lg flex items-center gap-1" style={{ background: 'rgba(110,231,247,0.08)', color: '#6ee7f7', border: '1px solid rgba(110,231,247,0.2)' }}>
+                          <CalendarDays size={11} />
+                          Scheduled
+                        </span>
                       )}
                       <button onClick={() => handleDelete(event.id)} className="p-1 rounded hover:bg-red-500/10">
                         <X size={13} style={{ color: '#64748b' }} />
